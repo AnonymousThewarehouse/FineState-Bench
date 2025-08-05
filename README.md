@@ -1,7 +1,7 @@
 # 🎯 FineState-Bench
 
 [![Paper](https://img.shields.io/badge/Paper-Arxiv%202025-blue)](https://arxiv.org/abs/XXXX.XXXXX)
-[![Code](https://img.shields.io/badge/Code-GitHub-green)](https://github.com/your-username/SliderBench)
+[![Code](https://img.shields.io/badge/Code-GitHub-green)](https://github.com/AnonymousThewarehouse/FineState-Bench)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-Models-orange)](https://huggingface.co/datasets/Willtime2006/Static-FineBench)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
@@ -9,8 +9,8 @@
 ![FineBench illustration diagram](assets/Illustration.png)
 
 📄 **Paper**: [FineState-Bench: A Comprehensive Benchmark for Fine-Grained State Control in GUI Agents](https://arxiv.org/abs/XXXX.XXXXX)  
-💻 **Code**: [GitHub Repository](https://github.com/your-username/SliderBench)  
-🤗 **Models**: [HuggingFace Hub](https://huggingface.co/your-username/SliderBench)
+💻 **Code**: [GitHub Repository](https://github.com/AnonymousThewarehouse/FineState-Bench)  
+🤗 **Models**: [HuggingFace Hub](https://huggingface.co/datasets/Willtime2006/Static-FineBench)
 
 ---
 
@@ -55,7 +55,7 @@ FineState-Bench/
 
 1. 📥 **Clone the repository:**
 ```bash
-git clone <repository-url>
+git clone https://github.com/AnonymousThewarehouse/FineState-Bench.git
 cd FineState-Bench
 ```
 

@@ -1,0 +1,44 @@
+# Core dependencies
+torch>=2.0.0
+transformers>=4.30.0
+accelerate>=0.20.0
+datasets>=2.12.0
+
+# Image processing
+Pillow>=9.0.0
+opencv-python>=4.8.0
+
+# HTTP requests and API clients
+requests>=2.28.0
+httpx>=0.24.0
+
+# Data processing
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Configuration and utilities
+PyYAML>=6.0
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+
+# Logging and progress
+tqdm>=4.65.0
+colorama>=0.4.6
+
+# Specific model dependencies
+qwen-vl-utils>=0.0.1
+sentence-transformers>=2.2.0
+
+# Development and testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Optional: For GPU acceleration
+# nvidia-ml-py3>=7.352.0
+
+# Optional: For distributed processing
+# ray>=2.0.0
+
+# Optional: For web interface
+# streamlit>=1.25.0
+# gradio>=3.40.0

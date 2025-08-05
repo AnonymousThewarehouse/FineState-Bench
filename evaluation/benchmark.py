@@ -258,10 +258,10 @@ class BenchmarkEvaluator:
             batch = test_cases[i:i+batch_size]
             batch_num = i//batch_size + 1
             total_batches = (len(test_cases) + batch_size - 1)//batch_size
-            self.logger.info(f"处理批次 {batch_num}/{total_batches}")
+            self.logger.info(f"Processing batch {batch_num}/{total_batches}")
 
             if self.progress_callback:
-                self.progress_callback(i, len(test_cases), f"批次 {batch_num}/{total_batches}")
+                self.progress_callback(i, len(test_cases), f"Batch {batch_num}/{total_batches}")
             
             try:
                 batch_results = []
@@ -272,7 +272,7 @@ class BenchmarkEvaluator:
                     try:
                         if self.progress_callback:
                             image_name = os.path.basename(test_case.get("image", ""))
-                            self.progress_callback(case_index, len(test_cases), f"处理 {image_name} (#{original_index})")
+                            self.progress_callback(case_index, len(test_cases), f"Processing {image_name} (#{original_index})")
                         
                         result = self._process_single_test_case(original_index, test_case, detector, model_client, model_client.model_name)
                         if result:
@@ -281,7 +281,7 @@ class BenchmarkEvaluator:
                             with open(output_file, "w", encoding="utf-8") as f:
                                 json.dump(result, f, ensure_ascii=False, indent=2)
                     except Exception as e:
-                        self.logger.error(f"处理测试用例 {original_index} 时出错: {str(e)}")
+                        self.logger.error(f"Error processing test case {original_index}: {str(e)}")
                 
                 results.extend(batch_results)
 
@@ -289,10 +289,10 @@ class BenchmarkEvaluator:
                     model_client.clear_cache()
                     
             except Exception as e:
-                self.logger.error(f"处理批次时出错: {str(e)}")
+                self.logger.error(f"Error processing batch: {str(e)}")
 
         if self.progress_callback:
-            self.progress_callback(len(test_cases), len(test_cases), "批处理完成")
+            self.progress_callback(len(test_cases), len(test_cases), "Batch processing completed")
         
         return results
     
@@ -304,7 +304,7 @@ class BenchmarkEvaluator:
 
                 if self.progress_callback:
                     image_name = os.path.basename(test_case.get("image", ""))
-                    self.progress_callback(i, len(test_cases), f"处理 {image_name} (#{original_index})")
+                    self.progress_callback(i, len(test_cases), f"Processing {image_name} (#{original_index})")
                 
                 result = self._process_single_test_case(original_index, test_case, detector, model_client, model_client.model_name)
                 if result:
@@ -314,14 +314,14 @@ class BenchmarkEvaluator:
                         json.dump(result, f, ensure_ascii=False, indent=2)
                 
                 if self.progress_callback:
-                    self.progress_callback(i + 1, len(test_cases), f"已完成 {image_name} (#{original_index})")
+                    self.progress_callback(i + 1, len(test_cases), f"Completed {image_name} (#{original_index})")
                     
             except Exception as e:
                 original_index = test_case.get('_original_index', i)
-                self.logger.error(f"处理测试用例 {original_index} 时出错: {str(e)}")
+                self.logger.error(f"Error processing test case {original_index}: {str(e)}")
 
         if self.progress_callback:
-            self.progress_callback(len(test_cases), len(test_cases), "单个处理模式完成")
+            self.progress_callback(len(test_cases), len(test_cases), "Single processing mode completed")
             
         return results
 
@@ -335,7 +335,7 @@ class BenchmarkEvaluator:
     ) -> Optional[Dict[str, Any]]:
         image_path = test_case.get("image")
         if not image_path:
-            self.logger.warning(f"测试用例 {index} 缺少图片路径")
+            self.logger.warning(f"Test case {index} missing image path")
             return None
 
         normalized_path = self._normalize_image_path(image_path)
@@ -348,12 +348,12 @@ class BenchmarkEvaluator:
                 if os.path.exists(alt_path):
                     image_path = alt_path
                 else:
-                    self.logger.warning(f'图片不存在: {normalized_path} (原路径: {image_path})')
+                    self.logger.warning(f'Image does not exist: {normalized_path} (original path: {image_path})')
                     return None
         else:
             image_path = normalized_path
             
-        self.logger.info(f"处理图片 {image_path}")
+        self.logger.info(f"Processing image {image_path}")
 
         instructions = test_case.get("component", {}).get("instructions", {})
         original_locate_prompt = instructions.get("locate", "")
@@ -369,12 +369,12 @@ class BenchmarkEvaluator:
                 
                 if cached_locate_prompt:
                     locate_prompt = cached_locate_prompt
-                    self.logger.info(f"从缓存加载locate增强prompt: {len(cached_locate_prompt)} 字符")
+                    self.logger.info(f"Loaded enhanced locate prompt from cache: {len(cached_locate_prompt)} characters")
                 if cached_interact_prompt:
                     interact_prompt = cached_interact_prompt  
-                    self.logger.info(f"从缓存加载interact增强prompt: {len(cached_interact_prompt)} 字符")
+                    self.logger.info(f"Loaded enhanced interact prompt from cache: {len(cached_interact_prompt)} characters")
             except Exception as e:
-                self.logger.warning(f"从缓存获取增强prompt失败: {str(e)}")
+                self.logger.warning(f"Failed to get enhanced prompts from cache: {str(e)}")
 
         elif detector:
             try:
@@ -382,15 +382,15 @@ class BenchmarkEvaluator:
                 formatted_info = detector.format_component_info(component_info)
 
                 if formatted_info["description"]:
-                    self.logger.info(f"组件描述: {formatted_info['description'][:50]}...")
+                    self.logger.info(f"Component description: {formatted_info['description'][:50]}...")
                 if formatted_info["bbox"]:
-                    self.logger.info(f"检测到边框坐标: {formatted_info['bbox']}")
+                    self.logger.info(f"Detected bounding box coordinates: {formatted_info['bbox']}")
 
                 locate_prompt = enhance_prompt_with_component_info(original_locate_prompt, formatted_info) if original_locate_prompt else ""
                 interact_prompt = enhance_prompt_with_component_info(original_interact_prompt, formatted_info) if original_interact_prompt else ""
                 
             except Exception as e:
-                self.logger.warning(f"组件检测失败: {str(e)}")
+                self.logger.warning(f"Component detection failed: {str(e)}")
                 formatted_info = {}
                 locate_prompt = original_locate_prompt
                 interact_prompt = original_interact_prompt
@@ -481,7 +481,7 @@ class BenchmarkEvaluator:
             if os.path.exists(self.cache_source_dir):
                 return self.cache_source_dir
             else:
-                self.logger.warning(f"指定的缓存源目录不存在: {self.cache_source_dir}")
+                self.logger.warning(f"Specified cache source directory does not exist: {self.cache_source_dir}")
                 return None
 
         potential_sources = [
@@ -496,10 +496,10 @@ class BenchmarkEvaluator:
 
                 result_files = list(Path(source_dir).glob("result_*.json"))
                 if result_files:
-                    self.logger.info(f"自动检测到缓存源目录: {source_dir}")
+                    self.logger.info(f"Auto-detected cache source directory: {source_dir}")
                     return source_dir
         
-        self.logger.warning("未找到合适的缓存源目录")
+        self.logger.warning("No suitable cache source directory found")
         return None
 
     def _check_completed_tests(self, result_dir: Path) -> set:
@@ -521,7 +521,7 @@ class BenchmarkEvaluator:
                         completed_indices.add(index)
                         
             except (ValueError, Exception) as e:
-                self.logger.warning(f"检查结果文件 {result_file} 时出错: {e}")
+                self.logger.warning(f"Error checking result file {result_file}: {e}")
                 
         return completed_indices
     
@@ -553,18 +553,18 @@ class BenchmarkEvaluator:
             return False
 
     def _load_test_cases(self, limit: int = 0, result_dir: Path = None) -> List[Dict[str, Any]]:
-        """加载测试用例，支持跳过已完成的测试"""
+        """Load test cases, support skipping completed tests"""
         test_cases = []
 
         if not os.path.exists(self.test_case_file):
-            self.logger.error(f"测试用例文件不存在: {self.test_case_file}")
+            self.logger.error(f"Test case file does not exist: {self.test_case_file}")
             return test_cases
 
         completed_indices = set()
         if result_dir and result_dir.exists():
             completed_indices = self._check_completed_tests(result_dir)
             if completed_indices:
-                self.logger.info(f"检测到 {len(completed_indices)} 个已完成的测试用例")
+                self.logger.info(f"Detected {len(completed_indices)} completed test cases")
 
         all_test_cases = []
         with open(self.test_case_file, 'r', encoding='utf-8') as f:
@@ -578,7 +578,7 @@ class BenchmarkEvaluator:
                     if limit > 0 and len(all_test_cases) >= limit:
                         break
                 except json.JSONDecodeError as e:
-                    self.logger.error(f"解析第 {line_num} 行时出错: {e}")
+                    self.logger.error(f"Error parsing line {line_num}: {e}")
                     continue
 
         indexed_test_cases = []
@@ -592,9 +592,9 @@ class BenchmarkEvaluator:
         total_loaded = len(indexed_test_cases)
         
         if skipped_count > 0:
-            self.logger.info(f"跳过 {skipped_count} 个已完成的测试用例，需要处理 {total_loaded} 个测试用例")
+            self.logger.info(f"Skipped {skipped_count} completed test cases, need to process {total_loaded} test cases")
         else:
-            self.logger.info(f"成功加载 {total_loaded} 个测试用例")
+            self.logger.info(f"Successfully loaded {total_loaded} test cases")
         
         return indexed_test_cases
         
@@ -612,7 +612,7 @@ class BenchmarkEvaluator:
         if result_dir and result_dir.exists():
             completed_indices = self._check_completed_tests(result_dir)
             if completed_indices:
-                self.logger.info(f"检测到 {len(completed_indices)} 个已完成的测试用例")
+                self.logger.info(f"Detected {len(completed_indices)} completed test cases")
         
         case_index = 0
         for category_key, category_name in categories.items():
@@ -620,7 +620,7 @@ class BenchmarkEvaluator:
             json_dir = Path(self.data_root) / f"{category_name}json"
             
             if not image_dir.exists() or not json_dir.exists():
-                self.logger.warning(f"跳过不存在的目录: {image_dir} 或 {json_dir}")
+                self.logger.warning(f"Skipping non-existent directories: {image_dir} or {json_dir}")
                 continue
 
             json_files = list(json_dir.glob("*.json"))
@@ -643,7 +643,7 @@ class BenchmarkEvaluator:
                                 try:
                                     json_data.append(json.loads(line))
                                 except json.JSONDecodeError as e:
-                                    self.logger.error(f"解析{json_file}第{line_num}行时出错: {e}")
+                                    self.logger.error(f"Error parsing line {line_num} in {json_file}: {e}")
                                     continue
 
                     for test_case in json_data:
@@ -653,7 +653,7 @@ class BenchmarkEvaluator:
 
                         image_path = test_case.get('image', '')
                         if not image_path:
-                            self.logger.warning(f"测试用例缺少图片路径: {test_case}")
+                            self.logger.warning(f"Test case missing image path: {test_case}")
                             case_index += 1
                             continue
                         
@@ -663,7 +663,7 @@ class BenchmarkEvaluator:
                             image_path = os.path.join(self.data_root, image_path.split('/')[-3], image_path.split('/')[-2], image_path.split('/')[-1])
                         
                         if not os.path.exists(image_path):
-                            self.logger.warning(f"图片文件不存在: {image_path}")
+                            self.logger.warning(f"Image file does not exist: {image_path}")
                             case_index += 1
                             continue
 
@@ -680,13 +680,13 @@ class BenchmarkEvaluator:
                         break
                         
                 except Exception as e:
-                    self.logger.error(f"读取JSON文件{json_file}时出错: {e}")
+                    self.logger.error(f"Error reading JSON file {json_file}: {e}")
                     continue
             
             if limit > 0 and len(test_cases) >= limit:
                 break
         
-        self.logger.info(f"成功加载 {len(test_cases)} 个desktop测试用例")
+        self.logger.info(f"Successfully loaded {len(test_cases)} desktop test cases")
         return test_cases
     
     def _convert_desktop_case_to_standard(self, desktop_case: Dict[str, Any], image_path: str, index: int) -> Dict[str, Any]:
@@ -727,7 +727,7 @@ class BenchmarkEvaluator:
             return standard_case
             
         except Exception as e:
-            self.logger.error(f"转换测试用例时出错: {e}")
+            self.logger.error(f"Error converting test case: {e}")
             return None
     
     def _normalize_image_path(self, image_path: str) -> str:

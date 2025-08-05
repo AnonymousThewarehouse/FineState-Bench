@@ -206,11 +206,11 @@ class CachedModelClient:
                 if not text_response or text_response.strip() == "":
                     self.logger.error("Model returned empty response")
                     return "Error: Empty response from model"
-                self.logger.debug(f"模型响应 (other): {response}")
+                self.logger.debug(f"Model response (other): {response}")
                 return text_response
             
         except Exception as e:
-            self.logger.error(f"获取响应时发生错误: {str(e)}")
+            self.logger.error(f"An error occurred while getting response: {str(e)}")
             return f"Error: {str(e)}"
             
     def _get_enhanced_prompt(self, image_path: str, prompt: str) -> Optional[str]:
@@ -226,7 +226,7 @@ class CachedModelClient:
             else:
                 return None
         except Exception as e:
-            self.logger.error(f"获取增强prompt时发生错误: {str(e)}")
+            self.logger.error(f"An error occurred while getting enhanced prompt: {str(e)}")
             return None
             
     def get_prompt_hit_rate(self) -> float:
@@ -254,17 +254,17 @@ class CachedModelClient:
 def create_cached_model_client(original_client, cache_source_dir: str, model_name: str, scenario: int):
 
     if not cache_source_dir or not os.path.exists(cache_source_dir):
-        logger.warning(f"缓存源目录不存在或未指定: {cache_source_dir}")
-        logger.warning("将使用原始模型客户端，不使用prompt增强")
+        logger.warning(f"Cache source directory does not exist or not specified: {cache_source_dir}")
+        logger.warning("Using original model client, prompt enhancement not used")
         return original_client
     
 
     prompt_cache = PromptCache(cache_source_dir, model_name, scenario)
     
     if prompt_cache.load_cache():
-        logger.info(f"成功创建带prompt增强功能的模型客户端，使用缓存源: {cache_source_dir}")
-        logger.info(f"缓存统计: {prompt_cache.get_cache_stats()}")
+        logger.info(f"Successfully created model client with prompt enhancement, using cache source: {cache_source_dir}")
+        logger.info(f"Cache stats: {prompt_cache.get_cache_stats()}")
         return CachedModelClient(original_client, prompt_cache, model_name, scenario)
     else:
-        logger.warning(f"从 {cache_source_dir} 加载缓存失败，使用原始模型客户端")
+        logger.warning(f"Failed to load cache from {cache_source_dir}, using original model client")
         return original_client

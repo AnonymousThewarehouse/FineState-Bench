@@ -309,23 +309,23 @@ class RealTimeMonitor:
         self.model_name = model_name
         self.results_dir = Path(f"results/mobile/{{model_name}}")
         self.last_check = 0
-        self.check_interval = 10  # 每10个样例检查一次
+        self.check_interval = 10  # Check every 10 samples or when total samples are reached
         
     def check_progress(self, current_index, total_samples):
-        # 每隔check_interval个样例或达到总数时检查成功率
+        # Check success rate every check_interval samples or when total samples are reached
         if current_index % self.check_interval == 0 or current_index == total_samples:
             self.calculate_and_report_success_rate(current_index, total_samples)
     
     def calculate_and_report_success_rate(self, processed, total):
         if not self.results_dir.exists():
-            log_progress(f"进度: {{processed}}/{{total}} ({{processed/total*100:.1f}}%) - 结果目录尚未创建")
+            log_progress(f"Progress: {{processed}}/{{total}} ({{processed/total*100:.1f}}%) - Results directory not created")
             return
             
-        # 统计已完成的结果文件
+        # Count completed result files
         result_files = list(self.results_dir.glob("result_*.json"))
         
         if not result_files:
-            log_progress(f"进度: {{processed}}/{{total}} ({{processed/total*100:.1f}}%) - 暂无结果文件")
+            log_progress(f"Progress: {{processed}}/{{total}} ({{processed/total*100:.1f}}%) - No result files yet")
             return
             
         locate_success = 0
@@ -341,11 +341,11 @@ class RealTimeMonitor:
                 locate_results = interaction_pred.get('locate_results', {{}})
                 interact_results = interaction_pred.get('interact_results', {{}})
                 
-                # 检查locate成功率（accuracy > 0表示成功）
+                # Check locate success rate (accuracy > 0 means success)
                 if locate_results.get('accuracy', 0) > 0:
                     locate_success += 1
                     
-                # 检查interact成功率（target_accuracy > 0表示成功）
+                # Check interact success rate (target_accuracy > 0 means success)
                 if interact_results.get('target_accuracy', 0) > 0:
                     interact_success += 1
                     
@@ -359,27 +359,27 @@ class RealTimeMonitor:
             interact_rate = interact_success / valid_results * 100
             overall_rate = (locate_rate + interact_rate) / 2
             
-            log_progress(f"📊 进度: {{processed}}/{{total}} ({{processed/total*100:.1f}}%) | "
-                        f"已完成: {{valid_results}} | "
-                        f"定位成功率: {{locate_rate:.1f}}% | "
-                        f"交互成功率: {{interact_rate:.1f}}% | "
-                        f"综合成功率: {{overall_rate:.1f}}%")
+            log_progress(f"📊 Progress: {{processed}}/{{total}} ({{processed/total*100:.1f}}%) | "
+                        f"Completed: {{valid_results}} | "
+                        f"Locate Success Rate: {{locate_rate:.1f}}% | "
+                        f"Interact Success Rate: {{interact_rate:.1f}}% | "
+                        f"Overall Success Rate: {{overall_rate:.1f}}%")
         else:
-            log_progress(f"进度: {{processed}}/{{total}} ({{processed/total*100:.1f}}%) - 暂无有效结果")
+            log_progress(f"Progress: {{processed}}/{{total}} ({{processed/total*100:.1f}}%) - No valid results yet")
 
-# 创建实时监测器
+# Create real-time monitor
 monitor = RealTimeMonitor('{model_name}')
 
 try:
-    log_progress("开始加载模型...")
+    log_progress("Starting model loading...")
     from evaluation.benchmark import BenchmarkEvaluator
-    log_progress("模型加载完成，开始推理测试...")
+    log_progress("Model loaded, starting inference test...")
     
-    # 创建自定义进度回调函数
+    # Create custom progress callback function
     def progress_callback(current, total, message):
         monitor.check_progress(current, total)
     
-    # 直接使用 BenchmarkEvaluator 并指定使用 desktop_en 数据
+    # Directly use BenchmarkEvaluator and specify using desktop_en data
     evaluator = BenchmarkEvaluator(data_root="desktop_en")
     evaluator.set_progress_callback(progress_callback)
     evaluator.run_evaluation(
@@ -390,13 +390,13 @@ try:
         use_ground_truth=True
     )
     
-    # 最终统计
+    # Final statistics
     monitor.calculate_and_report_success_rate({test_samples}, {test_samples})
-    log_progress("推理测试完成，结果: True")
+    log_progress("Inference test completed, result: True")
     print('SUCCESS: True')
     exit(0)
 except Exception as e:
-    log_progress(f"发生错误: {{e}}")
+    log_progress(f"Error occurred: {{e}}")
     print(f'ERROR: {{e}}')
     import traceback
     traceback.print_exc()

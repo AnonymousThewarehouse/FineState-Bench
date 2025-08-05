@@ -14,7 +14,7 @@ from .model_clients import get_model_client
 from .utils import ConfigLoader
 from .Plug_and_play_model import ComponentDetector
 
-# 配置日志
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -26,7 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger("LLM_Eval")
 
 def load_evaluation_data(file_path: str) -> List[Dict]:
-    """加载评估数据"""
+    """Load evaluation data"""
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             data = [json.loads(line) for line in f]
@@ -37,7 +37,7 @@ def load_evaluation_data(file_path: str) -> List[Dict]:
         return []
 
 def construct_prompt(base_prompt: str, instruction: str, instruction_type: str) -> str:
-    """构建提示词"""
+    """Construct prompt"""
     return f"{base_prompt}\n\nInstruction ({instruction_type}): {instruction}"
 
 def enhance_prompt_with_component_info(prompt: str, component_info: Dict) -> str:
@@ -149,9 +149,9 @@ def run_single_evaluation(model_client: Any, test_case: Dict, base_prompt: str =
             alt_path = os.path.join("element_detection", os.path.basename(image_path))
             if os.path.exists(alt_path):
                 image_path = alt_path
-                logger.info(f"使用替代图片路径: {image_path}")
+                logger.info(f"Using alternative image path: {image_path}")
             else:
-                logger.warning(f"图片不存在: {image_path}，使用空路径")
+                logger.warning(f"Image does not exist: {image_path}, using empty path")
                 image_path = None
         
         results = {
@@ -215,7 +215,7 @@ def run_single_evaluation(model_client: Any, test_case: Dict, base_prompt: str =
         return results
         
     except Exception as e:
-        logger.error(f"评估失败: {str(e)}")
+        logger.error(f"Evaluation failed: {str(e)}")
         return {
             "error": str(e),
             "image": image_path,
@@ -484,7 +484,7 @@ def parse_model_response(response: str, model_name: str = None) -> Dict:
         return result
         
     except Exception as e:
-        logger.error(f"解析模型响应出错: {str(e)}")
+        logger.error(f"Error parsing model response: {str(e)}")
         return {
             "coordinates": None,
             "description": "",

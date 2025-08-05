@@ -22,7 +22,7 @@ try:
 except ImportError:
     raise ImportError("Transformers library not found. Please install with 'pip install transformers'")
 
-# 避免循环导入
+# Avoid circular import
 from ..model_clients import ModelClient, ConfigurationError, ImageProcessingError
 
 logger = logging.getLogger("MiniCPMVClient")
@@ -83,18 +83,18 @@ class MiniCPMVClient(ModelClient):
     
     def _find_model_path(self) -> str:
         """Find the model path in various locations"""
-        # 首先尝试直接路径
+        # Try direct path first
         if os.path.exists(self.weights_path):
             logger.info(f"Using local model path: {self.weights_path}")
             return self.weights_path
             
-        # 尝试models目录
+        # Try models directory
         local_path = os.path.join("models", self.weights_path)
         if os.path.exists(local_path):
             logger.info(f"Found cached model path: {local_path}")
             return local_path
             
-        # 尝试查找快照目录 (AgentCPM-GUI)
+        # Try to find snapshot directory (AgentCPM-GUI)
         if "AgentCPM-GUI" in self.weights_path:
             possible_snapshot_bases = [
                 os.path.join("models", "AgentCPM-GUI", "models--openbmb--AgentCPM-GUI", "snapshots"),
@@ -103,7 +103,7 @@ class MiniCPMVClient(ModelClient):
             
             for snapshot_base in possible_snapshot_bases:
                 if os.path.exists(snapshot_base):
-                    # 查找快照目录中的第一个子目录
+                    # Find the first subdirectory in the snapshot directory
                     for snapshot_dir in os.listdir(snapshot_base):
                         snapshot_path = os.path.join(snapshot_base, snapshot_dir)
                         if os.path.isdir(snapshot_path) and os.path.exists(os.path.join(snapshot_path, "config.json")):
@@ -124,12 +124,12 @@ class MiniCPMVClient(ModelClient):
             if not os.path.exists(self.model_path):
                 raise ConfigurationError(f"Model path does not exist: {self.model_path}")
                 
-            # 检查config.json文件
+            # Check config.json file
             config_path = os.path.join(self.model_path, "config.json")
             if not os.path.exists(config_path):
                 raise ConfigurationError(f"Config file not found at {config_path}")
                 
-            # 读取配置文件
+            # Read config file
             with open(config_path, 'r') as f:
                 config_data = json.load(f)
                 logger.info(f"Model type: {config_data.get('model_type', 'unknown')}")
@@ -325,24 +325,24 @@ class MiniCPMVClient(ModelClient):
             messages = [{
                 "role": "user",
                 "content": [
-                    f"<Question>{enhanced_prompt}</Question>\n当前屏幕截图：",
+                    f"<Question>{enhanced_prompt}</Question>\nCurrent screen screenshot：",
                     image
                 ]
             }]
             
             # Use the official AgentCPM-GUI system prompt for UI tasks
             SYSTEM_PROMPT = '''# Role
-你是一名熟悉安卓系统触屏GUI操作的智能体，将根据用户的问题，分析当前界面的GUI元素和布局，生成相应的操作。
+You are an intelligent agent familiar with Android system touch screen GUI operations, which will analyze the GUI elements and layout of the current interface based on the user's question, and generate the corresponding operation.
 
 # Task
-针对用户问题，根据输入的当前屏幕截图，输出下一步的操作。
+Based on the current screen screenshot input, output the next operation.
 
 # Rule
-- 以紧凑JSON格式输出
-- 输出操作必须遵循Schema约束
+- Output in compact JSON format
+- The output operation must follow Schema constraints
 
 # Schema
-{"type":"object","properties":{"thought":{"type":"string","description":"思考过程"},"POINT":{"type":"array","items":{"type":"integer"},"minItems":2,"maxItems":2,"description":"点击坐标[x,y]"},"to":{"oneOf":[{"type":"string","enum":["up","down","left","right"]},{"type":"array","items":{"type":"integer"},"minItems":2,"maxItems":2}],"description":"滑动方向或目标坐标"},"PRESS":{"type":"string","enum":["HOME","BACK","ENTER"],"description":"按键"},"TYPE":{"type":"string","description":"输入文本"},"duration":{"type":"integer","description":"持续时间(毫秒)"},"STATUS":{"type":"string","enum":["start","continue","finish","satisfied","impossible","interrupt","need_feedback"],"description":"任务状态"}},"required":["thought"],"additionalProperties":false}'''
+{"type":"object","properties":{"thought":{"type":"string","description":"Thinking process"},"POINT":{"type":"array","items":{"type":"integer"},"minItems":2,"maxItems":2,"description":"Click coordinates [x,y]"},"to":{"oneOf":[{"type":"string","enum":["up","down","left","right"]},{"type":"array","items":{"type":"integer"},"minItems":2,"maxItems":2}],"description":"Slide direction or target coordinates"},"PRESS":{"type":"string","enum":["HOME","BACK","ENTER"],"description":"Key"},"TYPE":{"type":"string","description":"Input text"},"duration":{"type":"integer","description":"Duration (milliseconds)"},"STATUS":{"type":"string","enum":["start","continue","finish","satisfied","impossible","interrupt","need_feedback"],"description":"Task status"}},"required":["thought"],"additionalProperties":false}'''
             
             # Use the model's chat method with official AgentCPM-GUI format
             try:

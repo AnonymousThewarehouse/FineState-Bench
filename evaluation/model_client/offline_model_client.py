@@ -15,14 +15,14 @@ try:
         AutoTokenizer, AutoProcessor, AutoModelForCausalLM, 
         AutoModel, AutoModelForVision2Seq
     )
-    # 尝试导入Qwen2VL相关类
+    # Try to import Qwen2VL related classes
     try:
         from transformers import Qwen2VLForConditionalGeneration
         QWEN2VL_AVAILABLE = True
     except ImportError:
         QWEN2VL_AVAILABLE = False
 except ImportError:
-    print("警告: transformers库导入失败，请确保已安装")
+    print("Warning: transformers library import failed, please ensure it is installed")
 
 from ..model_clients import ModelClient, ConfigurationError, ImageProcessingError
 
@@ -150,23 +150,23 @@ class OfflineModelClient(ModelClient):
             self.logger.info("Loading model...")
             model_name_norm = os.path.basename(os.path.normpath(self.model_path))
             
-            # 针对UGround模型的特殊处理
+            # Special handling for UGround models
             if "uground" in model_name_norm.lower():
                 model_loading_strategies = []
                 
-                # 如果Qwen2VLForConditionalGeneration可用，优先使用
+                # If Qwen2VLForConditionalGeneration is available, use it first
                 if QWEN2VL_AVAILABLE:
                     model_loading_strategies.extend([
-                        # 使用权重只读模式绕过安全限制
+                        # Use weights_only mode to bypass security restrictions
                         lambda: Qwen2VLForConditionalGeneration.from_pretrained(
                             self.model_path, 
                             trust_remote_code=True, 
                             torch_dtype=torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16,
                             device_map="auto",
                             attn_implementation="eager",
-                            weights_only=False  # 绕过安全限制
+                            weights_only=False  # Bypass security restrictions
                         ),
-                        # 简化版本，无特殊attention设置
+                        # Simplified version, no special attention settings
                         lambda: Qwen2VLForConditionalGeneration.from_pretrained(
                             self.model_path, 
                             trust_remote_code=True, 
@@ -174,7 +174,7 @@ class OfflineModelClient(ModelClient):
                             device_map="auto",
                             weights_only=False
                         ),
-                        # CPU模式备选
+                        # CPU mode alternative
                         lambda: Qwen2VLForConditionalGeneration.from_pretrained(
                             self.model_path, 
                             trust_remote_code=True, 
@@ -184,7 +184,7 @@ class OfflineModelClient(ModelClient):
                         ),
                     ])
                 
-                # 备选策略
+                # Alternative strategies
                 model_loading_strategies.extend([
                     lambda: AutoModelForCausalLM.from_pretrained(
                         self.model_path, 
@@ -207,7 +207,7 @@ class OfflineModelClient(ModelClient):
                     ),
                 ])
             else:
-                # 通用模型加载策略
+                # General model loading strategies
                 model_loading_strategies = [
                     lambda: AutoModelForCausalLM.from_pretrained(self.model_path, trust_remote_code=True, torch_dtype=torch.float16, device_map="auto"),
                     lambda: AutoModel.from_pretrained(self.model_path, trust_remote_code=True, torch_dtype=torch.float16, device_map="auto"),
@@ -220,11 +220,11 @@ class OfflineModelClient(ModelClient):
                     self.model = strategy()
                     self.logger.info(f"Model loaded successfully with strategy #{i+1}")
                     
-                    # 验证模型是否有generate方法
+                    # Verify if the model has a generate method
                     if not hasattr(self.model, 'generate'):
                         self.logger.warning(f"Model loaded with strategy #{i+1} does not have 'generate' method")
                         if i < len(model_loading_strategies) - 1:
-                            continue  # 尝试下一个策略
+                            continue  # Try next strategy
                         else:
                             raise ConfigurationError(f"No model loading strategy provided a model with 'generate' method for {model_name_norm}")
                     
@@ -317,7 +317,7 @@ class OfflineModelClient(ModelClient):
         """Generate response using standard methods."""
         self.logger.info("Using standard generation method")
         try:
-            # 针对UGround模型的特殊处理
+            # Special handling for UGround models
             if "uground" in self.model_name.lower():
                 return self._uground_generate(prompt, image)
             
@@ -339,13 +339,13 @@ class OfflineModelClient(ModelClient):
         try:
             self.logger.info("Using UGround-specific generation method")
             
-            # 确保有processor和image
+            # Ensure processor and image are available
             if not self.processor or not image:
                 return {"error": "UGround requires both processor and image", "raw_response": ""}
             
-            # UGround特殊的输入处理 - 使用Qwen2VL的messages格式
+            # UGround specific input processing - use Qwen2VL messages format
             try:
-                # UGround基于Qwen2VL，使用messages格式
+                # UGround is based on Qwen2VL, use messages format
                 messages = [
                     {
                         "role": "user",
@@ -362,27 +362,27 @@ class OfflineModelClient(ModelClient):
                     }
                 ]
                 
-                # 应用chat template
+                # Apply chat template
                 if hasattr(self.processor, 'apply_chat_template') and hasattr(self.processor, 'chat_template') and self.processor.chat_template:
                     text = self.processor.apply_chat_template(
                         messages, tokenize=False, add_generation_prompt=True
                     )
                     self.logger.info("Using UGround processor chat template")
                 else:
-                    # 如果没有chat template，抛出异常进入fallback
+                    # If no chat template, raise exception to enter fallback
                     raise ValueError("No chat template available")
                 
-                # 处理图像和文本
+                # Process image and text
                 try:
-                    # 导入qwen_vl_utils处理
+                    # Import qwen_vl_utils for processing
                     from qwen_vl_utils import process_vision_info
                     image_inputs, video_inputs = process_vision_info(messages)
                 except ImportError:
-                    # 备选：直接使用图像
+                    # Alternative: use image directly
                     image_inputs = [image]
                     video_inputs = None
                 
-                # 使用processor处理输入
+                # Use processor to process input
                 inputs = self.processor(
                     text=[text],
                     images=image_inputs,
@@ -397,12 +397,12 @@ class OfflineModelClient(ModelClient):
                 
             except Exception as e:
                 self.logger.warning(f"UGround chat template failed, trying alternative: {e}")
-                # 回退到手动构建chat格式
+                # Fallback to manually constructing chat format
                 try:
-                    # 手动构建Qwen2VL格式的文本
+                    # Manually construct Qwen2VL format text
                     formatted_text = f"<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|>{prompt}<|im_end|>\n<|im_start|>assistant\n"
                     
-                    # 使用processor处理图像和文本
+                    # Use processor to process image and text
                     inputs = self.processor(
                         text=[formatted_text],
                         images=[image],
@@ -414,9 +414,9 @@ class OfflineModelClient(ModelClient):
                     
                 except Exception as e2:
                     self.logger.warning(f"Manual format failed, trying basic processing: {e2}")
-                    # 最后的fallback：基本文本处理，但添加图像token
+                    # Final fallback: basic text processing, but add image token
                     try:
-                        # 直接处理图像和文本，不使用特殊格式
+                        # Directly process image and text, no special format
                         inputs = self.processor(
                             text=prompt,
                             images=image,
@@ -429,7 +429,7 @@ class OfflineModelClient(ModelClient):
                         self.logger.error(f"All UGround input processing methods failed: {e3}")
                         return {"error": f"UGround input processing failed: {e3}", "raw_response": ""}
             
-            # 生成响应
+            # Generate response
             with torch.no_grad():
                 outputs = self.model.generate(
                     **inputs,
@@ -438,7 +438,7 @@ class OfflineModelClient(ModelClient):
                     pad_token_id=self.tokenizer.eos_token_id if hasattr(self.tokenizer, 'eos_token_id') else None
                 )
             
-            # 解码响应
+            # Decode response
             generated_ids_trimmed = [
                 out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, outputs)
             ]

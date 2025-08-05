@@ -59,15 +59,15 @@ class ComponentDetector:
                                     "now_coords": processing_details.get("now_coords"),
                                     "target_coords": processing_details.get("target_coords")
                                 }
-                logger.info(f"成功加载 {len(self.ground_truth_coords)} 个真实边框坐标")
+                logger.info(f"Successfully loaded {len(self.ground_truth_coords)} ground truth bounding box coordinates")
             else:
-                logger.warning(f"真实边框坐标文件不存在: {ground_truth_path}")
+                logger.warning(f"Ground truth bounding box file does not exist: {ground_truth_path}")
         except Exception as e:
-            logger.error(f"加载真实边框坐标失败: {str(e)}")
+            logger.error(f"Failed to load ground truth bounding box coordinates: {str(e)}")
             
     def set_use_ground_truth(self, use: bool):
         self.use_ground_truth = use
-        logger.info(f"使用真实边框坐标: {use}")
+        logger.info(f"Use ground truth bounding box: {use}")
         
     def detect_component(self, image_path: str, prompt: str = None) -> Dict:
 
@@ -83,7 +83,7 @@ class ComponentDetector:
                     gt_data = self.ground_truth_coords[normalized_path]
                     bbox = gt_data.get("bbox")
                     if bbox:
-                        logger.info(f"使用真实边框坐标: {normalized_path} -> {bbox}")
+                        logger.info(f"Using ground truth bounding box: {normalized_path} -> {bbox}")
                         return {
                             "success": True,
                             "description": "Ground truth component detected",
@@ -92,27 +92,10 @@ class ComponentDetector:
                             "error": None
                         }
                 
-                logger.warning(f"未找到图像的真实边框数据: {normalized_path}")
+                logger.warning(f"Ground truth bounding box data not found for image: {normalized_path}")
            
             if not prompt:
-                prompt = """请分析这个UI界面图像，识别其中的UI组件。
-                请提供以下信息：
-                1. 组件类型（如按钮、滑块、复选框等）
-                2. 组件名称（如果有）
-                3. 组件的边框坐标 [x1, y1, x2, y2]
-                4. 置信度（0-1之间的小数）
-                
-                请以JSON格式返回结果，包含以下字段：
-                {
-                    "components": [
-                        {
-                            "type": "组件类型",
-                            "name": "组件名称",
-                            "bbox": [x1, y1, x2, y2],
-                            "confidence": 0.95
-                        }
-                    ]
-                }"""
+                prompt = """Please analyze this UI interface image and identify the UI components in it.\nPlease provide the following information:\n1. Component type (such as button, slider, checkbox, etc.)\n2. Component name (if any)\n3. Component bounding box coordinates [x1, y1, x2, y2]\n4. Confidence (a decimal between 0-1)\n\nPlease return the result in JSON format, including the following fields:\n{\n    \"components\": [\n        {\n            \"type\": \"component type\",\n            \"name\": \"component name\",\n            \"bbox\": [x1, y1, x2, y2],\n            \"confidence\": 0.95\n        }\n    ]\n}"""
             
             image_base64 = image_to_base64(image_path)
             
@@ -142,7 +125,7 @@ class ComponentDetector:
                 }
                         
         except Exception as e:
-            error_msg = f"组件检测失败: {str(e)}"
+            error_msg = f"Component detection failed: {str(e)}"
             logger.error(error_msg)
             return {
                 "success": False,
@@ -162,7 +145,7 @@ class ComponentDetector:
             return self._get_api_response(image_base64, prompt)
             
         except Exception as e:
-            logger.error(f"获取模型响应失败: {str(e)}")
+            logger.error(f"Failed to get model response: {str(e)}")
             return ""
     
     def _get_local_model_response(self, image_base64: str, prompt: str) -> str:
@@ -171,7 +154,7 @@ class ComponentDetector:
             
             return """{"components": [{"type": "slider", "name": "video_slider", "bbox": [100, 400, 800, 450], "confidence": 0.9}]}"""
         except Exception as e:
-            logger.error(f"本地模型响应失败: {str(e)}")
+            logger.error(f"Local model response failed: {str(e)}")
             return ""
     
     def _get_api_response(self, image_base64: str, prompt: str) -> str:
@@ -182,11 +165,11 @@ class ComponentDetector:
             elif "gpt" in self.model_name.lower():
                 return self._call_openai_api(image_base64, prompt)
             else:
-                logger.warning(f"不支持的模型类型: {self.model_name}")
+                logger.warning(f"Unsupported model type: {self.model_name}")
                 return ""
                 
         except Exception as e:
-            logger.error(f"API调用失败: {str(e)}")
+            logger.error(f"API call failed: {str(e)}")
             return ""
     
     def _call_gemini_api(self, image_base64: str, prompt: str) -> str:
@@ -195,7 +178,7 @@ class ComponentDetector:
            
             return """{"components": [{"type": "slider", "name": "video_slider", "bbox": [100, 400, 800, 450], "confidence": 0.9}]}"""
         except Exception as e:
-            logger.error(f"Gemini API调用失败: {str(e)}")
+            logger.error(f"Gemini API call failed: {str(e)}")
             return ""
     
     def _call_openai_api(self, image_base64: str, prompt: str) -> str:
@@ -204,7 +187,7 @@ class ComponentDetector:
             
             return """{"components": [{"type": "slider", "name": "video_slider", "bbox": [100, 400, 800, 450], "confidence": 0.9}]}"""
         except Exception as e:
-            logger.error(f"OpenAI API调用失败: {str(e)}")
+            logger.error(f"OpenAI API call failed: {str(e)}")
             return ""
 
     def _parse_text_response(self, response: str) -> Dict:
@@ -214,12 +197,12 @@ class ComponentDetector:
         coord_patterns = [
             r'\[(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\]',  
             r'\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\)',  
-            r'坐标[：:]\s*\[?(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\]?',  
+            r'Coordinates[：:][\s\[]*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\]?',  
         ]
         
-        type_pattern = r'类型[：:]\s*([^\n,]+)'
-        name_pattern = r'名称[：:]\s*([^\n,]+)'
-        confidence_pattern = r'置信度[：:]\s*(0\.\d+|1\.0)'
+        type_pattern = r'Type[：:][^\n,]+'
+        name_pattern = r'Name[：:][^\n,]+'
+        confidence_pattern = r'Confidence[：:](0\.\d+|1\.0)'
         
         for line in response.split('\n'):
             component = {}
@@ -319,7 +302,7 @@ class ComponentDetector:
             
             return normalized
         except Exception as e:
-            logger.error(f"坐标归一化失败: {str(e)}")
+            logger.error(f"Coordinate normalization failed: {str(e)}")
             return None
 
     def denormalize_coordinates(self, coords: List[float], image_size: Tuple[int, int]) -> List[float]:
@@ -347,7 +330,7 @@ class ComponentDetector:
             
             return pixel_coords
         except Exception as e:
-            logger.error(f"坐标反归一化失败: {str(e)}")
+            logger.error(f"Coordinate denormalization failed: {str(e)}")
             return None
         
     def validate_coordinates(self, coords: List[float], is_normalized: bool = True) -> bool:
@@ -375,7 +358,7 @@ class ComponentDetector:
             
             return True
         except Exception as e:
-            logger.error(f"坐标验证失败: {str(e)}")
+            logger.error(f"Coordinate validation failed: {str(e)}")
             return False
 
     def calculate_iou(self, bbox1: List[float], bbox2: List[float]) -> float:
@@ -403,5 +386,5 @@ class ComponentDetector:
             
             return iou
         except Exception as e:
-            logger.error(f"IoU计算失败: {str(e)}")
+            logger.error(f"IoU calculation failed: {str(e)}")
             return 0.0

@@ -1,36 +1,36 @@
 #!/bin/bash
 
-# Mobile 消融实验脚本 - 只运行 Description-only 和 Coordinate-only 实验
+# Mobile ablation experiment script - only run Description-only and Coordinate-only experiments
 
-# 代理配置函数
+# Proxy configuration function
 setup_proxy() {
-    echo "配置代理..." | tee -a $LOG_FILE
+    echo "Configuring proxy..." | tee -a $LOG_FILE
     
-    # 启动代理
+    # Start proxy
     clashon
     sleep 2
     
-    # 设置全局模式
+    # Set global mode
     curl -X PATCH http://127.0.0.1:9090/configs -d '{"mode": "Global"}' 2>/dev/null
     sleep 1
     
-    # 获取可用节点
-    echo "获取可用代理节点..." | tee -a $LOG_FILE
+    # Get available nodes
+    echo "Getting available proxy nodes..." | tee -a $LOG_FILE
     available_proxies=$(curl -s http://127.0.0.1:9090/proxies/GLOBAL | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
 proxies = data.get('all', [])
-for proxy in proxies[:5]:  # 显示前5个节点
-    print(f'可用节点: {proxy}')
-# 使用第一个可用节点
+for proxy in proxies[:5]:  # Display first 5 nodes
+    print(f'Available node: {proxy}')
+# Use the first available node
 if proxies:
-    print(f'使用节点: {proxies[0]}')
+    print(f'Using node: {proxies[0]}')
     sys.exit(0)
 else:
     sys.exit(1)
 ")
     
-    # 设置代理节点（使用第一个可用节点）
+    # Set proxy node (using the first available node)
     first_proxy=$(curl -s http://127.0.0.1:9090/proxies/GLOBAL | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
@@ -41,67 +41,67 @@ if proxies:
     
     if [ ! -z "$first_proxy" ]; then
         curl -X PUT http://127.0.0.1:9090/proxies/GLOBAL -d "{\"name\": \"$first_proxy\"}" 2>/dev/null
-        echo "代理设置完成: $first_proxy" | tee -a $LOG_FILE
+        echo "Proxy set: $first_proxy" | tee -a $LOG_FILE
         
-        # 设置环境变量
+        # Set environment variables
         export http_proxy=http://127.0.0.1:7890
         export https_proxy=http://127.0.0.1:7890
         export HTTP_PROXY=http://127.0.0.1:7890
         export HTTPS_PROXY=http://127.0.0.1:7890
     else
-        echo "警告: 无法获取代理节点，继续使用直连" | tee -a $LOG_FILE
+        echo "Warning: Could not get proxy node, continuing with direct connection" | tee -a $LOG_FILE
     fi
 }
 
-# 检查网络连接
+# Check network connection
 check_network() {
-    echo "检查网络连接..." | tee -a $LOG_FILE
+    echo "Checking network connection..." | tee -a $LOG_FILE
     if ! curl -s --connect-timeout 10 https://www.google.com > /dev/null; then
-        echo "网络连接失败，尝试配置代理..." | tee -a $LOG_FILE
+        echo "Network connection failed, attempting to configure proxy..." | tee -a $LOG_FILE
         setup_proxy
         
-        # 再次检查
+        # Re-check
         if ! curl -s --connect-timeout 10 https://www.google.com > /dev/null; then
-            echo "代理配置后仍无法连接，请检查网络设置" | tee -a $LOG_FILE
+            echo "Proxy configuration failed, please check network settings" | tee -a $LOG_FILE
         else
-            echo "代理配置成功" | tee -a $LOG_FILE
+            echo "Proxy configured successfully" | tee -a $LOG_FILE
         fi
     else
-        echo "网络连接正常" | tee -a $LOG_FILE
+        echo "Network connection normal" | tee -a $LOG_FILE
     fi
 }
 
-# 设置日志文件
+# Set log file
 LOG_FILE="benchmark_mobile_ablation.log"
-echo "开始 Mobile 消融实验 $(date)" > $LOG_FILE
+echo "Starting Mobile ablation experiment $(date)" > $LOG_FILE
 
-# 设置工作目录
+# Set working directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
-# 检查并配置网络
+# Check and configure network
 check_network
 
-# 固定使用 gemini-2.5-flash 模型
+# Fixed use of gemini-2.5-flash model
 SELECTED_MODEL="google/gemini-2.5-flash"
-echo "使用模型: $SELECTED_MODEL" | tee -a $LOG_FILE
+echo "Using model: $SELECTED_MODEL" | tee -a $LOG_FILE
 
-# 根据选择的模型设置基础进度文件名
+# Set base progress file name based on the selected model
 MODEL_SAFE_NAME=$(echo "$SELECTED_MODEL" | sed 's/[^a-zA-Z0-9]/_/g')
 PROGRESS_FILE_BASE="evaluation_progress_mobile_ablation_${MODEL_SAFE_NAME}"
 
-echo "进度文件基础名: $PROGRESS_FILE_BASE" | tee -a $LOG_FILE
+echo "Progress file base name: $PROGRESS_FILE_BASE" | tee -a $LOG_FILE
 
-# 运行Python脚本进行评估
-echo "开始运行消融实验..." | tee -a $LOG_FILE
+# Run Python script for evaluation
+echo "Starting ablation experiment..." | tee -a $LOG_FILE
 
-# 设置环境变量
+# Set environment variables
 export PYTHONPATH="$SCRIPT_DIR"
 export TEST_NON_INTERACTIVE=1
 export SELECTED_MODEL="$SELECTED_MODEL"
 export PROGRESS_FILE_BASE="$PROGRESS_FILE_BASE"
 
-# 创建Python评估脚本
+# Create Python evaluation script
 cat > run_mobile_ablation.py << 'EOF'
 #!/usr/bin/env python3
 import os
@@ -112,50 +112,50 @@ import json
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-# 添加项目路径
+# Add project path
 sys.path.append(os.getcwd())
 
-# 配置日志
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# 进度文件基础名 - 将由shell脚本传入
+# Progress file base name - will be passed by shell script
 PROGRESS_FILE_BASE = os.environ.get('PROGRESS_FILE_BASE', 'evaluation_progress_mobile_ablation')
 
 def get_progress_file(ablation_type):
-    """为指定的消融类型获取进度文件路径"""
+    """Get progress file path for a specified ablation type"""
     return f"{PROGRESS_FILE_BASE}_{ablation_type}.json"
 
 def load_progress(ablation_type):
-    """加载指定消融类型的进度文件"""
+    """Load progress file for a specified ablation type"""
     progress_file = get_progress_file(ablation_type)
     if os.path.exists(progress_file):
         try:
             with open(progress_file, 'r') as f:
                 return json.load(f)
         except Exception as e:
-            logger.warning(f"加载进度文件失败: {e}")
+            logger.warning(f"Failed to load progress file: {e}")
     return {}
 
 def save_progress(progress_data, ablation_type):
-    """保存进度到指定消融类型的文件"""
+    """Save progress to a specified ablation type file"""
     progress_file = get_progress_file(ablation_type)
     try:
         with open(progress_file, 'w') as f:
             json.dump(progress_data, f, indent=2)
     except Exception as e:
-        logger.error(f"保存进度文件失败: {e}")
+        logger.error(f"Failed to save progress file: {e}")
 
 def is_task_completed(model_name, ablation_type, progress_data):
-    """检查任务是否已完成"""
+    """Check if task is completed"""
     task_key = f"{model_name}_ablation_{ablation_type}"
     return progress_data.get(task_key, {}).get('completed', False)
 
 def mark_task_completed(model_name, ablation_type, progress_data):
-    """标记任务为已完成"""
+    """Mark task as completed"""
     task_key = f"{model_name}_ablation_{ablation_type}"
     progress_data[task_key] = {
         'completed': True,
@@ -166,27 +166,27 @@ def mark_task_completed(model_name, ablation_type, progress_data):
     save_progress(progress_data, ablation_type)
 
 def clear_gpu_memory():
-    """清理GPU内存"""
+    """Clear GPU memory"""
     try:
         import torch
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-            logger.info("GPU内存已清理")
+            logger.info("GPU memory cleared")
     except Exception as e:
-        logger.warning(f"清理GPU内存失败: {e}")
+        logger.warning(f"Failed to clear GPU memory: {e}")
 
 def run_ablation_test(model_name: str, ablation_type: str, limit: int = 821) -> bool:
-    """运行指定类型的消融测试"""
+    """Run ablation test for a specified type"""
     ablation_configs = {
         "description_only": {
-            "name": "仅描述消融实验",
-            "description": "只使用组件描述，不包含坐标信息",
+            "name": "Description ablation experiment",
+            "description": "Only use component description, no coordinate information",
             "use_cache": False,
             "cache_source_dir": None
         },
         "coordinate_only": {
-            "name": "仅坐标消融实验", 
-            "description": "只使用坐标预测，不包含描述信息",
+            "name": "Coordinate ablation experiment", 
+            "description": "Only use coordinate prediction, no description information",
             "use_cache": False,
             "cache_source_dir": None
         }
@@ -195,88 +195,88 @@ def run_ablation_test(model_name: str, ablation_type: str, limit: int = 821) -> 
     ablation_info = ablation_configs[ablation_type]
     
     logger.info("="*60)
-    logger.info(f"🚀 开始消融实验")
-    logger.info(f"模型: {model_name}")
-    logger.info(f"类型: {ablation_type} ({ablation_info['name']})")
-    logger.info(f"描述: {ablation_info['description']}")
-    logger.info(f"测试用例数: {limit}")
+    logger.info(f"🚀 Starting ablation experiment")
+    logger.info(f"Model: {model_name}")
+    logger.info(f"Type: {ablation_type} ({ablation_info['name']})")
+    logger.info(f"Description: {ablation_info['description']}")
+    logger.info(f"Number of test cases: {limit}")
     logger.info("="*60)
     
-    # 简单进度回调
+    # Simple progress callback
     def simple_progress(current: int, total: int, message: str = ""):
         percentage = (current / total) * 100 if total > 0 else 0
-        logger.info(f"进度: {current}/{total} ({percentage:.1f}%) - {message}")
+        logger.info(f"Progress: {current}/{total} ({percentage:.1f}%) - {message}")
     
     try:
-        # 导入评估器
+        # Import evaluator
         from evaluation.benchmark import BenchmarkEvaluator
         
-        # 创建评估器，使用mobile_en数据
+        # Create evaluator, using mobile_en data
         evaluator = BenchmarkEvaluator(
             data_root="mobile_en",
             use_cache=ablation_info['use_cache'], 
             cache_source_dir=ablation_info['cache_source_dir']
         )
         
-        # 设置进度回调
+        # Set progress callback
         evaluator.set_progress_callback(simple_progress)
         
         start_time = time.time()
         
-        # 运行评估 - 使用场景2（组件检测增强）的设置
+        # Run evaluation - using scenario 2 (component detection enhancement) settings
         evaluator.run_evaluation(
             model_name=model_name,
             limit=limit,
-            scenario=2,  # 使用场景2的框架
+            scenario=2,  # Use framework for scenario 2
             detector_model="google/gemini-2.5-flash",
             use_ground_truth=False,
-            ablation_type=ablation_type  # 传递消融类型
+            ablation_type=ablation_type  # Pass ablation type
         )
         
         duration = time.time() - start_time
         
-        logger.info(f"✅ {model_name} {ablation_type} 测试完成 - 耗时: {duration:.1f}秒")
+        logger.info(f"✅ {model_name} {ablation_type} test completed - Duration: {duration:.1f} seconds")
         
-        # 标记任务完成
+        # Mark task as completed
         progress_data = load_progress(ablation_type)
         mark_task_completed(model_name, ablation_type, progress_data)
         
         return True
         
     except Exception as e:
-        logger.error(f"❌ {model_name} {ablation_type} 测试失败: {str(e)}")
+        logger.error(f"❌ {model_name} {ablation_type} test failed: {str(e)}")
         return False
     finally:
         clear_gpu_memory()
 
 def main():
-    """主函数（消融实验版）"""
-    # 从环境变量获取模型名称
+    """Main function (ablation experiment version)"""
+    # Get model name from environment variables
     selected_model = os.environ.get('SELECTED_MODEL', 'google/gemini-2.5-flash')
     models = [selected_model]
     
-    # 消融实验类型
+    # Ablation experiment types
     ablation_types = ["description_only", "coordinate_only"]
     
-    limit = 821  # mobile_en数据集总数
+    limit = 821  # Total number of mobile_en dataset
 
-    # 检查环境
+    # Check environment
     if not os.path.exists("config/models_config.yaml"):
-        logger.error("❌ 找不到模型配置文件: config/models_config.yaml")
+        logger.error("❌ Model configuration file not found: config/models_config.yaml")
         return False
     
-    # 检查mobile_en数据是否存在
+    # Check if mobile_en data exists
     if not os.path.exists("mobile_en"):
-        logger.error("❌ 找不到测试数据目录: mobile_en")
+        logger.error("❌ Test data directory not found: mobile_en")
         return False
 
-    # 为每个消融类型分别检查进度
+    # Check progress for each ablation type separately
     all_tasks = [(m, a) for m in models for a in ablation_types]
     pending_tasks = []
     completed_count = 0
     
     for m, a in all_tasks:
-        progress_data = load_progress(a)  # 为每个消融类型加载单独的进度
+        progress_data = load_progress(a)  # Load progress for each ablation type separately
         if not is_task_completed(m, a, progress_data):
             pending_tasks.append((m, a))
         else:
@@ -286,47 +286,47 @@ def main():
     success_count = completed_count
 
     if completed_count > 0:
-        logger.info(f"⏭️  发现已完成的任务: {completed_count}/{total_tests}")
-        logger.info(f"📝 跳过已完成任务，继续执行剩余 {len(pending_tasks)} 个任务")
+        logger.info(f"⏭️  Found completed tasks: {completed_count}/{total_tests}")
+        logger.info(f"📝 Skipping completed tasks, continuing with {len(pending_tasks)} tasks")
     else:
-        logger.info(f"🚀 开始全新消融实验，共 {total_tests} 个任务")
+        logger.info(f"🚀 Starting new ablation experiment, total {total_tests} tasks")
 
     if not pending_tasks:
-        logger.info("🎉 所有消融实验已完成！")
+        logger.info("🎉 All ablation experiments completed!")
         return True
 
-    logger.info(f"将执行 {len(pending_tasks)} 个剩余任务")
+    logger.info(f"Executing {len(pending_tasks)} remaining tasks")
 
-    # 断点保护：添加确认机制
+    # Breakpoint protection: add confirmation mechanism
     if len(pending_tasks) > 0:
-        logger.info("⚠️  断点保护：即将开始消融实验")
-        logger.info(f"模型: {pending_tasks[0][0]}")
-        logger.info(f"消融类型: {pending_tasks[0][1]}")
-        logger.info("如需停止，请在5秒内按 Ctrl+C")
+        logger.info("⚠️  Breakpoint protection: ablation experiment about to start")
+        logger.info(f"Model: {pending_tasks[0][0]}")
+        logger.info(f"Ablation type: {pending_tasks[0][1]}")
+        logger.info("If you want to stop, press Ctrl+C within 5 seconds")
         try:
             import time
             time.sleep(5)
         except KeyboardInterrupt:
-            logger.info("用户中断，安全退出")
+            logger.info("User interrupted, exiting safely")
             return False
 
-    # 串行运行消融实验（避免缓存冲突）
+    # Run ablation experiments sequentially (to avoid cache conflicts)
     for m, a in pending_tasks:
         try:
             ok = run_ablation_test(m, a, limit)
             if ok:
                 success_count += 1
-                logger.info(f"✅ {m} {a} 完成")
+                logger.info(f"✅ {m} {a} completed")
             else:
-                logger.error(f"❌ {m} {a} 失败")
+                logger.error(f"❌ {m} {a} failed")
         except Exception as e:
-            logger.error(f"❌ {m} {a} 异常: {e}")
+            logger.error(f"❌ {m} {a} exception: {e}")
 
     final_success_count = success_count
-    logger.info(f"📊 消融实验完成统计:")
-    logger.info(f"   总任务数: {total_tests}")
-    logger.info(f"   已完成: {final_success_count}")
-    logger.info(f"   成功率: {final_success_count/total_tests*100:.1f}%")
+    logger.info(f"📊 Ablation experiment completion statistics:")
+    logger.info(f"    Total tasks: {total_tests}")
+    logger.info(f"    Completed: {final_success_count}")
+    logger.info(f"    Success rate: {final_success_count/total_tests*100:.1f}%")
     
     return final_success_count == total_tests
 
@@ -335,22 +335,22 @@ if __name__ == "__main__":
     sys.exit(0 if success else 1)
 EOF
 
-# 运行Python评估脚本
+# Run Python evaluation script
 python run_mobile_ablation.py
 
-# 检查评估结果
+# Check evaluation results
 if [ $? -eq 0 ]; then
-    echo "✅ Mobile 消融实验成功完成 $(date)" | tee -a $LOG_FILE
-    echo "进度文件保存在:" | tee -a $LOG_FILE
+    echo "✅ Mobile ablation experiment completed successfully $(date)" | tee -a $LOG_FILE
+    echo "Progress files saved in:" | tee -a $LOG_FILE
     echo "  - Description-only: ${PROGRESS_FILE_BASE}_description_only.json" | tee -a $LOG_FILE
     echo "  - Coordinate-only: ${PROGRESS_FILE_BASE}_coordinate_only.json" | tee -a $LOG_FILE
 else
-    echo "❌ Mobile 消融实验过程中出现错误 $(date)" | tee -a $LOG_FILE
-    echo "进度已保存，可重新运行脚本继续执行" | tee -a $LOG_FILE
+    echo "❌ Error during Mobile ablation experiment $(date)" | tee -a $LOG_FILE
+    echo "Progress saved, can re-run script to continue execution" | tee -a $LOG_FILE
 fi
 
-# 记录完成时间
-echo "Mobile 消融实验完成 $(date)" | tee -a $LOG_FILE
+# Record completion time
+echo "Mobile ablation experiment completed $(date)" | tee -a $LOG_FILE
 
-# 清理临时文件
+# Clean up temporary files
 rm -f run_mobile_ablation.py

@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-模型客户端模块初始化文件
+Model client module initialization file
 """
 
-# 使用延迟导入避免循环导入问题
+# Use lazy import to avoid circular import issues
 def get_offline_model_client():
     from .offline_model_client import OfflineModelClient
     return OfflineModelClient
@@ -42,7 +42,7 @@ def get_lora_adapter_client():
     from .lora_adapter_client import LoRAAdapterClient
     return LoRAAdapterClient
 
-# 不要在此处直接导入类，避免循环导入
+# Do not import classes directly here to avoid circular imports
 __all__ = ["get_offline_model_client", "get_open_router_client", "get_os_atlas_client", "get_infigui_client", "get_ui_r1_client", "get_minicpmv_client", "get_chatglm_client", "get_mobilellama_client", "get_lora_adapter_client"]
 
 # This file is intentionally left minimal.

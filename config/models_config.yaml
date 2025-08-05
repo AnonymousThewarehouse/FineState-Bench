@@ -1,12 +1,12 @@
-# 统一管理 offline 和 online 模型的配置文件
-# 每个模型一个条目，包含名称、类型、路径/API、描述等
+# Unified configuration file for managing offline and online models
+# Each model is an entry, including name, type, path/API, description, etc.
 
-# ===== 在线模型配置 =====
+# ===== Online Model Configurations =====
 google/gemini-2.5-flash-preview:
   model_type: online
   api_url: https://openrouter.ai/api/v1/chat/completions
   api_key: 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
-  description: Google Gemini 2.5 Flash Preview 在线模型
+  description: Google Gemini 2.5 Flash Preview online model
   params:
     timeout: 60
     max_retries: 3
@@ -20,7 +20,7 @@ google/gemini-2.5-pro:
   model_type: online
   api_url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent
   api_key: AIzaSyCJjuWdzj8_pcT1Aoh-aPZjjCWhj_A4V6U
-  description: Google Gemini 2.5 Pro 在线模型
+  description: Google Gemini 2.5 Pro online model
   params:
     timeout: 60
     max_retries: 3
@@ -31,7 +31,7 @@ qwen/qwen2.5-vl-72b-instruct:
   model_type: online
   api_url: https://openrouter.ai/api/v1/chat/completions
   api_key: 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
-  description: Qwen 2.5 VL 72B Instruct 在线模型
+  description: Qwen 2.5 VL 72B Instruct online model
   params:
     timeout: 60
     max_retries: 3
@@ -45,7 +45,7 @@ anthropic/claude-sonnet-4:
   model_type: online
   api_url: https://api.openrouter.ai/api/v1/chat/completions
   api_key: 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
-  description: Anthropic Claude Sonnet 4 在线模型
+  description: Anthropic Claude Sonnet 4 online model
   params:
     timeout: 60
     max_retries: 3
@@ -55,58 +55,55 @@ anthropic/claude-sonnet-4:
     HTTP-Referer: https://openrouter.ai/
     X-Title: Slider UI Evaluation
 
-# ===== 离线模型配置 =====
+# ===== Offline Model Configurations =====
 
 GUI-R1-7B:
   model_type: offline
   weights_path: models/GUI-R1-7B/GUI-R1-7B
-  description: GUI-R1-7B GUI交互模型
+  description: GUI-R1-7B GUI interaction model
   params:
     max_tokens: 1024
     temperature: 0.1
     do_sample: false
     max_image_pixels: 12845056
-
 
 Jedi-7B-1080p:
   model_type: offline
   weights_path: models/Jedi-7B-1080p
-  description: Jedi-7B-1080p GUI交互模型
+  description: Jedi-7B-1080p GUI interaction model
   params:
     max_tokens: 1024
     temperature: 0.1
     do_sample: false
     max_image_pixels: 12845056
 
-
 OS-Atlas-Base-7B:
   model_type: offline
   weights_path: models/OS-Atlas-Base-7B
-  description: OS-Atlas-Base-7B GUI动作生成模型
+  description: OS-Atlas-Base-7B GUI action generation model
   params:
     max_tokens: 1024
     temperature: 0.1
     do_sample: false
     max_image_pixels: 1048576
-
 
 UGround-V1-7B:
   model_type: offline
   weights_path: models/UGround-V1-7B
-  description: UGround-V1-7B GUI交互模型
+  description: UGround-V1-7B GUI interaction model
   params:
     max_tokens: 1024
     temperature: 0.1
     do_sample: false
     max_image_pixels: 1048576
 
-# ===== 新增模型配置 =====
+# ===== Newly Added Model Configurations =====
 
-# MiniCPMV 系列模型 (AgentCPM-GUI)
+# MiniCPMV series model (AgentCPM-GUI)
 AgentCPM-GUI:
   model_type: offline
   weights_path: models/AgentCPM-GUI
-  description: AgentCPM-GUI 基于MiniCPMV的GUI交互模型
+  description: AgentCPM-GUI GUI interaction model based on MiniCPMV
   params:
     max_tokens: 512
     temperature: 0.1
@@ -114,11 +111,11 @@ AgentCPM-GUI:
     max_image_pixels: 2048000  # 448*448*4 (max 4 slices)
     # No memory limits - let distributed inference use all available GPU memory
 
-# ChatGLM 系列模型 (CogAgent)
+# ChatGLM series model (CogAgent)
 cogagent-9b-20241220:
   model_type: offline
   weights_path: models/cogagent-9b-20241220
-  description: CogAgent-9B 基于ChatGLM的GUI交互模型
+  description: CogAgent-9B GUI interaction model based on ChatGLM
   client_type: chatglm  # Use specialized ChatGLM client
   params:
     max_tokens: 1024
@@ -128,11 +125,11 @@ cogagent-9b-20241220:
     use_cache: true  # Enable cache for better performance
     # No memory limits - let distributed inference use all available GPU memory
 
-# LLaVA 系列模型 (GUIExplorer)
+# LLaVA series model (GUIExplorer)
 GUIExplorer:
   model_type: offline
   weights_path: models/GUIExplorer
-  description: GUIExplorer 基于LLaVA的GUI交互模型
+  description: GUIExplorer GUI interaction model based on LLaVA
   params:
     max_tokens: 512
     temperature: 0.1
@@ -140,11 +137,11 @@ GUIExplorer:
     max_image_pixels: 1048576  # 1024*1024
     # No memory limits - let distributed inference use all available GPU memory
 
-# Qwen2.5-VL 系列模型 (Holo1-7B)
+# Qwen2.5-VL series model (Holo1-7B)
 Holo1-7B:
   model_type: offline
   weights_path: models/Holo1-7B
-  description: Holo1-7B 基于Qwen2.5-VL的GUI交互模型
+  description: Holo1-7B GUI interaction model based on Qwen2.5-VL
   client_type: ui_r1  # Use specialized UI-R1 client
   params:
     max_tokens: 1024
@@ -157,11 +154,11 @@ Holo1-7B:
     use_cache: true
     early_stopping: true
 
-# MobileLlama 系列模型 (MobileVLM_V2)
+# MobileLlama series model (MobileVLM_V2)
 MobileVLM_V2-3B:
   model_type: offline
   weights_path: models/MobileVLM_V2-3B
-  description: MobileVLM_V2-3B 基于MobileLlama的GUI交互模型
+  description: MobileVLM_V2-3B GUI interaction model based on MobileLlama
   params:
     max_tokens: 1024
     temperature: 0.1
@@ -171,40 +168,40 @@ MobileVLM_V2-3B:
 MobileVLM_V2-7B:
   model_type: offline
   weights_path: models/MobileVLM_V2-7B
-  description: MobileVLM_V2-7B 基于MobileLlama的GUI交互模型
+  description: MobileVLM_V2-7B GUI interaction model based on MobileLlama
   params:
     max_tokens: 1024
     temperature: 0.1
     do_sample: false
     max_image_pixels: 112896  # MobileVLM specific: 336*336 (CLIP style)
 
-# Qwen2-VL 系列模型 (ShowUI-2B)
+# Qwen2-VL series model (ShowUI-2B)
 ShowUI-2B:
   model_type: offline
   weights_path: models/ShowUI-2B
-  description: ShowUI-2B 基于Qwen2-VL的GUI交互模型
+  description: ShowUI-2B GUI interaction model based on Qwen2-VL
   params:
     max_tokens: 1024
     temperature: 0.1
     do_sample: false
     max_image_pixels: 12845056  # Qwen2-VL specific: 14*14*4*1280
 
-# InternVL2 系列模型 (SpiritSight-Agent-8B)
+# InternVL2 series model (SpiritSight-Agent-8B)
 SpiritSight-Agent-8B:
   model_type: offline
   weights_path: models/SpiritSight-Agent-8B-working
-  description: SpiritSight-Agent-8B 基于InternVL2的GUI交互模型
+  description: SpiritSight-Agent-8B GUI interaction model based on InternVL2
   params:
     max_tokens: 1024
     temperature: 0.1
     do_sample: false
     max_image_pixels: 200704  # InternVL2 specific: 448*448 (force image size)
 
-# Qwen2.5-VL 系列模型 (UI-TARS-1.5-7B)
+# Qwen2.5-VL series model (UI-TARS-1.5-7B)
 UI-TARS-1.5-7B:
   model_type: offline
   weights_path: models/UI-TARS-1.5-7B
-  description: UI-TARS-1.5-7B 基于Qwen2.5-VL的GUI交互模型
+  description: UI-TARS-1.5-7B GUI interaction model based on Qwen2.5-VL
   client_type: ui_r1  # Use specialized UI-R1 client for Qwen2.5-VL models
   params:
     max_tokens: 1024
@@ -215,16 +212,16 @@ UI-TARS-1.5-7B:
     early_stopping: true
     min_new_tokens: 20  # Ensure sufficient output for coordinate extraction
 
-# LoRA 适配器模型 (web-llama2-13b-adapter)
+# LoRA adapter model (web-llama2-13b-adapter)
 web-llama2-13b-adapter:
   model_type: offline
   weights_path: models/web-llama2-13b-adapter
   base_model_path: meta-llama/Llama-2-13b-hf
-  description: web-llama2-13b-adapter 基于Llama2-13B的LoRA适配器GUI交互模型
+  description: web-llama2-13b-adapter LoRA adapter GUI interaction model based on Llama2-13B
   status: requires_external_dependencies
   notes: "Requires meta-llama/Llama-2-13b-hf base model which is not available locally"
   params:
     max_tokens: 1024
     temperature: 0.1
     do_sample: false
-    max_image_pixels: 0  # 文本模型，不处理图像
+    max_image_pixels: 0  # Text model, does not process images

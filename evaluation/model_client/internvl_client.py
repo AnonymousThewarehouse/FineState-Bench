@@ -16,7 +16,7 @@ try:
 except ImportError:
     raise ImportError("Transformers library not found. Please install with 'pip install transformers'")
 
-# 避免循环导入
+# Avoid circular import
 from ..model_clients import ModelClient, ConfigurationError, ImageProcessingError
 
 logger = logging.getLogger("InternVLClient")
@@ -73,18 +73,18 @@ class InternVLClient(ModelClient):
     
     def _find_model_path(self) -> str:
         """Find the model path in various locations"""
-        # 首先尝试直接路径
+        # Try direct path first
         if os.path.exists(self.weights_path):
             logger.info(f"Using local model path: {self.weights_path}")
             return self.weights_path
             
-        # 尝试models目录
+        # Try models directory
         local_path = os.path.join("models", self.weights_path)
         if os.path.exists(local_path):
             logger.info(f"Found cached model path: {local_path}")
             return local_path
             
-        # 尝试查找SpiritSight特定路径
+        # Try to find SpiritSight specific path
         if "SpiritSight" in self.weights_path:
             possible_paths = [
                 os.path.join("models", "SpiritSight-Agent-8B", "SpiritSight-Agent-8B-base"),
@@ -110,12 +110,12 @@ class InternVLClient(ModelClient):
             if not os.path.exists(self.model_path):
                 raise ConfigurationError(f"Model path does not exist: {self.model_path}")
                 
-            # 检查config.json文件
+            # Check config.json file
             config_path = os.path.join(self.model_path, "config.json")
             if not os.path.exists(config_path):
                 raise ConfigurationError(f"Config file not found at {config_path}")
                 
-            # 读取配置文件
+            # Read config file
             with open(config_path, 'r') as f:
                 config_data = json.load(f)
                 logger.info(f"Model type: {config_data.get('model_type', 'unknown')}")
@@ -134,13 +134,6 @@ class InternVLClient(ModelClient):
                 dtype = torch.float32
                 logger.info("CUDA not available, using float32 precision on CPU")
                 device_map = "cpu"
-            
-            # Load tokenizer
-            logger.info("Loading AutoTokenizer...")
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                self.model_path,
-                trust_remote_code=True
-            )
             
             # Load processor
             logger.info("Loading AutoProcessor...")

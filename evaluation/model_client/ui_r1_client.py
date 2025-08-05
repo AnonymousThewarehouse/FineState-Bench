@@ -32,7 +32,7 @@ except ImportError:
     QWEN_VL_UTILS_AVAILABLE = False
     print("Warning: qwen_vl_utils not available. Please install with 'pip install qwen-vl-utils'")
 
-# 避免循环导入
+# Avoid circular import
 from ..model_clients import ModelClient, ConfigurationError, ImageProcessingError
 
 logger = logging.getLogger("UIR1Client")
@@ -151,22 +151,22 @@ class UIR1Client(ModelClient):
     
     def _find_model_path(self) -> str:
         """Find the model path in various locations for different UI-R1 variants"""
-        # 首先尝试直接路径
+        # Try direct path first
         if os.path.exists(self.weights_path):
             logger.info(f"Using local model path: {self.weights_path}")
             return self.weights_path
             
-        # 尝试models目录
+        # Try models directory
         local_path = os.path.join("models", self.weights_path)
         if os.path.exists(local_path):
             logger.info(f"Found cached model path: {local_path}")
             return local_path
             
-        # 尝试查找快照目录 - 支持不同模型变体
+        # Try to find snapshot directory - support different model variants
         variant_paths = []
         
         if "Qwen2.5-VL" in self.weights_path:
-            # Qwen2.5-VL-3B-UI-R1 系列
+            # Qwen2.5-VL-3B-UI-R1 series
             variant_paths.extend([
                 os.path.join("models", self.weights_path, "models--LZXzju--Qwen2.5-VL-3B-UI-R1", "snapshots"),
                 os.path.join("models", "Qwen2.5-VL-3B-UI-R1", "models--LZXzju--Qwen2.5-VL-3B-UI-R1", "snapshots"),
@@ -174,14 +174,14 @@ class UIR1Client(ModelClient):
                 os.path.join("models", "Qwen2.5-VL-3B-UI-R1-E", "models--LZXzju--Qwen2.5-VL-3B-UI-R1-E", "snapshots"),
             ])
         elif "GUI-R1" in self.weights_path:
-            # GUI-R1 系列
+            # GUI-R1 series
             variant_paths.extend([
                 os.path.join("models", self.weights_path, "models--ritzzai--GUI-R1", "snapshots"),
                 os.path.join("models", "GUI-R1-3B", "models--ritzzai--GUI-R1", "snapshots"),
                 os.path.join("models", "GUI-R1-7B", "models--ritzzai--GUI-R1", "snapshots"),
             ])
         elif "Jedi" in self.weights_path:
-            # Jedi 系列
+            # Jedi series
             variant_paths.extend([
                 os.path.join("models", self.weights_path, "models--xlangai--Jedi-3B-1080p", "snapshots"),
                 os.path.join("models", "Jedi-3B-1080p", "models--xlangai--Jedi-3B-1080p", "snapshots"),
@@ -189,20 +189,20 @@ class UIR1Client(ModelClient):
                 os.path.join("models", "Jedi-7B-1080p", "models--xlangai--Jedi-7B-1080p", "snapshots"),
             ])
         
-        # 通用路径
+        # General path
         variant_paths.append(os.path.join("models", self.weights_path, "snapshots"))
         
         for snapshot_base in variant_paths:
             if os.path.exists(snapshot_base):
-                # 查找快照目录中的第一个子目录
+                # Find the first subdirectory in the snapshot directory
                 for snapshot_dir in os.listdir(snapshot_base):
                     snapshot_path = os.path.join(snapshot_base, snapshot_dir)
                     if os.path.isdir(snapshot_path):
-                        # 检查是否直接有config.json文件
+                        # Check if there is a subdirectory containing the config file (e.g., for GUI-R1)
                         if os.path.exists(os.path.join(snapshot_path, "config.json")):
                             logger.info(f"Found model snapshot path: {snapshot_path}")
                             return snapshot_path
-                        # 检查是否有子目录包含配置文件（如GUI-R1的情况）
+                        # Check if there is a subdirectory containing the config file (e.g., for GUI-R1)
                         for sub_dir in os.listdir(snapshot_path):
                             sub_path = os.path.join(snapshot_path, sub_dir)
                             if os.path.isdir(sub_path) and os.path.exists(os.path.join(sub_path, "config.json")):
@@ -525,34 +525,34 @@ class UIR1Client(ModelClient):
             raise ConfigurationError(f"Failed to load UI-R1 model: {str(e)}")
     
     def _fix_processor_patch_size(self, config_data):
-        """修复处理器的patch_size配置以避免NoneType除法错误"""
-        # 获取vision tower信息
+        """Fix processor's patch_size config to avoid NoneType division errors"""
+        # Get vision tower info
         mm_vision_tower = config_data.get('mm_vision_tower', '')
         
-        # 确定正确的patch size
+        # Determine correct patch size
         if 'patch14' in mm_vision_tower:
             correct_patch_size = 14
         elif 'patch16' in mm_vision_tower:
             correct_patch_size = 16
         else:
-            # 对于GUIExplorer，默认使用14
+            # For GUIExplorer, default to 14
             correct_patch_size = 14
             logger.warning(f"Unknown patch size in vision tower '{mm_vision_tower}', defaulting to 14")
         
-        # 修复processor的patch_size
+        # Fix processor's patch_size
         if hasattr(self.processor, 'patch_size'):
             if self.processor.patch_size is None:
                 self.processor.patch_size = correct_patch_size
                 logger.info(f"Fixed processor patch_size to {correct_patch_size}")
         
-        # 修复image_processor的patch_size
+        # Fix image_processor's patch_size
         if hasattr(self.processor, 'image_processor'):
             if hasattr(self.processor.image_processor, 'patch_size'):
                 if self.processor.image_processor.patch_size is None:
                     self.processor.image_processor.patch_size = correct_patch_size
                     logger.info(f"Fixed image_processor patch_size to {correct_patch_size}")
         
-        # 修复vision_model的patch_size（如果存在）
+        # Fix vision_model's patch_size (if exists)
         if hasattr(self.processor, 'vision_model'):
             if hasattr(self.processor.vision_model, 'patch_size'):
                 if self.processor.vision_model.patch_size is None:
@@ -636,14 +636,14 @@ Instruction: {task_prompt}"""
             List of scaled coordinates [x, y] or None if not found
         """
         try:
-            # 安全解包 scale_factors
+            # Safe unpacking of scale_factors
             if not scale_factors or len(scale_factors) != 4:
                 logger.warning("Invalid scale_factors, using default values")
                 scale_x, scale_y, original_width, original_height = 1.0, 1.0, 1920, 1920
             else:
                 scale_x, scale_y, original_width, original_height = scale_factors
             
-            # First try to extract from <answer> tags
+            # Try to extract from <answer> tags
             answer_match = re.search(r'<answer>(.*?)</answer>', response, re.DOTALL)
             if answer_match:
                 answer_content = answer_match.group(1).strip()

@@ -30,7 +30,7 @@ except ImportError:
     QWEN_VL_UTILS_AVAILABLE = False
     print("Warning: qwen_vl_utils not available. Please install with 'pip install qwen-vl-utils'")
 
-# 避免循环导入
+# Avoid circular import
 from ..model_clients import ModelClient, ConfigurationError, ImageProcessingError
 
 logger = logging.getLogger("InfiGUIClient")
@@ -96,20 +96,20 @@ class InfiGUIClient(ModelClient):
     
     def _find_model_path(self) -> str:
         """Find the model path in various locations"""
-        # 首先尝试直接路径
+        # Try direct path first
         if os.path.exists(self.weights_path):
             logger.info(f"Using local model path: {self.weights_path}")
             return self.weights_path
             
-        # 尝试models目录
+        # Try models directory
         local_path = os.path.join("models", self.weights_path)
         if os.path.exists(local_path):
             logger.info(f"Found cached model path: {local_path}")
             return local_path
             
-        # 尝试查找快照目录 (InfiGUI models)
+        # Try to find snapshot directory (InfiGUI models)
         if "InfiGUI" in self.weights_path:
-            # 尝试不同的快照目录结构
+            # Try different snapshot directory structures
             possible_snapshot_bases = [
                 os.path.join("models", self.weights_path, "models--Reallm-Labs--InfiGUI-R1-3B", "snapshots"),
                 os.path.join("models", "InfiGUI-R1-3B", "models--Reallm-Labs--InfiGUI-R1-3B", "snapshots")
@@ -117,7 +117,7 @@ class InfiGUIClient(ModelClient):
             
             for snapshot_base in possible_snapshot_bases:
                 if os.path.exists(snapshot_base):
-                    # 查找快照目录中的第一个子目录
+                    # Find the first subdirectory in the snapshot directory
                     for snapshot_dir in os.listdir(snapshot_base):
                         snapshot_path = os.path.join(snapshot_base, snapshot_dir)
                         if os.path.isdir(snapshot_path) and os.path.exists(os.path.join(snapshot_path, "config.json")):
@@ -138,12 +138,12 @@ class InfiGUIClient(ModelClient):
             if not os.path.exists(self.model_path):
                 raise ConfigurationError(f"Model path does not exist: {self.model_path}")
                 
-            # 检查config.json文件
+            # Check config.json file
             config_path = os.path.join(self.model_path, "config.json")
             if not os.path.exists(config_path):
                 raise ConfigurationError(f"Config file not found at {config_path}")
                 
-            # 读取配置文件
+            # Read config file
             with open(config_path, 'r') as f:
                 config_data = json.load(f)
                 logger.info(f"Model type: {config_data.get('model_type', 'unknown')}")

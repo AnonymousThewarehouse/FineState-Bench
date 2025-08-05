@@ -24,7 +24,7 @@ try:
 except ImportError:
     raise ImportError("Transformers library not found. Please install with 'pip install transformers'")
 
-# 避免循环导入
+# Avoid circular import
 from ..model_clients import ModelClient, ConfigurationError, ImageProcessingError
 
 logger = logging.getLogger("ChatGLMClient")
@@ -81,18 +81,18 @@ class ChatGLMClient(ModelClient):
     
     def _find_model_path(self) -> str:
         """Find the model path in various locations"""
-        # 首先尝试直接路径
+        # First try direct path
         if os.path.exists(self.weights_path):
             logger.info(f"Using local model path: {self.weights_path}")
             return self.weights_path
             
-        # 尝试models目录
+        # Try models directory
         local_path = os.path.join("models", self.weights_path)
         if os.path.exists(local_path):
             logger.info(f"Found cached model path: {local_path}")
             return local_path
             
-        # 尝试查找快照目录 (cogagent-9b)
+        # Try to find snapshot directory (cogagent-9b)
         if "cogagent" in self.weights_path.lower():
             possible_snapshot_bases = [
                 os.path.join("models", "cogagent-9b-20241220", "models--THUDM--cogagent-9b-20241220", "snapshots"),
@@ -101,7 +101,7 @@ class ChatGLMClient(ModelClient):
             
             for snapshot_base in possible_snapshot_bases:
                 if os.path.exists(snapshot_base):
-                    # 查找快照目录中的第一个子目录
+                    # Find the first subdirectory in the snapshot directory
                     for snapshot_dir in os.listdir(snapshot_base):
                         snapshot_path = os.path.join(snapshot_base, snapshot_dir)
                         if os.path.isdir(snapshot_path) and os.path.exists(os.path.join(snapshot_path, "config.json")):
@@ -122,12 +122,12 @@ class ChatGLMClient(ModelClient):
             if not os.path.exists(self.model_path):
                 raise ConfigurationError(f"Model path does not exist: {self.model_path}")
                 
-            # 检查config.json文件
+            # Check config.json file
             config_path = os.path.join(self.model_path, "config.json")
             if not os.path.exists(config_path):
                 raise ConfigurationError(f"Config file not found at {config_path}")
                 
-            # 读取配置文件
+            # Read config file
             with open(config_path, 'r') as f:
                 config_data = json.load(f)
                 logger.info(f"Model type: {config_data.get('model_type', 'unknown')}")
@@ -460,24 +460,24 @@ History steps:
             # Use the model's chat method if available
             try:
                 if hasattr(self.model, 'chat'):
-                    # 使用适当的参数来确保模型能够正确推理
+                    # Use appropriate parameters to ensure the model can reason correctly
                     response, _ = self.model.chat(
                         self.tokenizer,
                         image,
                         gui_prompt,
                         history=[],
-                        temperature=0.1,  # 降低温度以获得更确定性的输出
-                        max_length=512,   # 增加最大长度
-                        top_p=0.9        # 使用top-p采样
+                        temperature=0.1,  # Lower temperature for more deterministic output
+                        max_length=512,   # Increase max length
+                        top_p=0.9        # Use top-p sampling
                     )
                     
-                    # 验证响应是否有效
+                    # Validate if the response is valid
                     if response and len(response.strip()) > 10 and "fallback" not in response.lower():
                         logger.info(f"Generated valid response: {response[:100]}...")
                         return {"raw_response": response, "error": None}
                     else:
                         logger.warning(f"Invalid or short response: {response}")
-                        # 继续到generate方法而不是立即使用fallback
+                        # Continue to generate method instead of immediately using fallback
                         raise ValueError("Response too short or invalid")
                 else:
                     # Fallback to generate method
@@ -513,14 +513,14 @@ History steps:
                         try:
                             outputs = self.model.generate(
                                 inputs["input_ids"],
-                                max_new_tokens=300,  # 增加输出长度
-                                do_sample=True,      # 启用采样
-                                temperature=0.1,     # 低温度确保确定性
-                                top_p=0.9,          # top-p采样
+                                max_new_tokens=300,  # Increase output length
+                                do_sample=True,      # Enable sampling
+                                temperature=0.1,     # Low temperature for determinism
+                                top_p=0.9,          # top-p sampling
                                 eos_token_id=self.tokenizer.eos_token_id,
                                 pad_token_id=self.tokenizer.pad_token_id or self.tokenizer.eos_token_id,
-                                use_cache=True,     # 启用缓存以提高性能
-                                repetition_penalty=1.1  # 避免重复
+                                use_cache=True,     # Enable cache for better performance
+                                repetition_penalty=1.1  # Avoid repetition
                             )
                         except Exception as gen_error:
                             logger.warning(f"Standard generation failed: {gen_error}")
@@ -529,7 +529,7 @@ History steps:
                                 outputs = self.model.generate(
                                     inputs["input_ids"],
                                     max_new_tokens=200,
-                                    do_sample=False,  # 贪婪解码，确保确定性
+                                    do_sample=False,  # Greedy decoding for determinism
                                     use_cache=False,
                                     repetition_penalty=1.0
                                 )
@@ -546,9 +546,9 @@ History steps:
                     if input_text in response:
                         response = response.split(input_text)[-1].strip()
                     
-                    # 验证生成的响应是否有效
+                    # Validate if the generated response is valid
                     if response and len(response.strip()) > 20:
-                        # 检查是否包含必要的坐标格式
+                        # Check if the necessary coordinate format is included
                         import re
                         coord_pattern = r'\[(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)\]'
                         if re.search(coord_pattern, response):
@@ -556,15 +556,15 @@ History steps:
                             return {"raw_response": response, "error": None}
                         else:
                             logger.warning(f"Response missing coordinate format: {response[:100]}...")
-                            # 如果没有坐标格式，尝试修复响应而不是立即fallback
+                            # If no coordinate format, try to fix the response instead of immediately fallback
                             if "Component Description:" in response and "Reasoning:" in response:
-                                # 添加默认坐标格式
+                                # Add default coordinate format
                                 fixed_response = response.replace("Interaction Coordinates:", "Interaction Coordinates: [0.5, 0.5]\nFixed Coordinates:")
                                 logger.info("Fixed response by adding default coordinates")
                                 return {"raw_response": fixed_response, "error": None}
                     
                     logger.warning(f"Response too short or invalid: {response}")
-                    # 只有在响应完全无效时才使用fallback
+                    # Only use fallback if the response is completely invalid
                     intelligent_fallback = self._get_intelligent_fallback(prompt, image_path)
                     return {"raw_response": intelligent_fallback, "error": "Generated response was invalid"}
                     

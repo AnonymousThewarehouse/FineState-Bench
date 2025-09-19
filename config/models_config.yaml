@@ -5,7 +5,7 @@
 google/gemini-2.5-flash-preview:
   model_type: online
   api_url: https://openrouter.ai/api/v1/chat/completions
-  api_key: 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
+  api_key: "YOUR_API_KEY"
   description: Google Gemini 2.5 Flash Preview online model
   params:
     timeout: 60
@@ -19,7 +19,7 @@ google/gemini-2.5-flash-preview:
 google/gemini-2.5-pro:
   model_type: online
   api_url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent
-  api_key: AIzaSyCJjuWdzj8_pcT1Aoh-aPZjjCWhj_A4V6U
+  api_key: "YOUR_API_KEY"
   description: Google Gemini 2.5 Pro online model
   params:
     timeout: 60
@@ -30,7 +30,7 @@ google/gemini-2.5-pro:
 qwen/qwen2.5-vl-72b-instruct:
   model_type: online
   api_url: https://openrouter.ai/api/v1/chat/completions
-  api_key: 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
+  api_key: "YOUR_API_KEY"
   description: Qwen 2.5 VL 72B Instruct online model
   params:
     timeout: 60
@@ -44,7 +44,7 @@ qwen/qwen2.5-vl-72b-instruct:
 anthropic/claude-sonnet-4:
   model_type: online
   api_url: https://api.openrouter.ai/api/v1/chat/completions
-  api_key: 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
+  api_key: "YOUR_API_KEY"
   description: Anthropic Claude Sonnet 4 online model
   params:
     timeout: 60

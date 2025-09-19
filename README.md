@@ -212,12 +212,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 If you use FineState-Bench in your research, please cite:
 
 ```bibtex
-@article{finestatebench2025,
-  title={FineState-Bench: A Comprehensive Benchmark for Fine-Grained State Control in GUI Agents},
-  author={Fengxian Ji, Jingpu Yang, Zirui Song, Yuanxi Wang, Zhexuan Cui, Yuke Li, Qian Jiang, Miao Fang, Xiuying Chen},
-  archivePrefix={arXiv},
-  primaryClass={cs.AI},
-  year={2025}
-  url={https://arxiv.org/abs/2405.14573},
+@misc{ji2025finestatebenchcomprehensivebenchmarkfinegrained,
+      title={FineState-Bench: A Comprehensive Benchmark for Fine-Grained State Control in GUI Agents}, 
+      author={Fengxian Ji and Jingpu Yang and Zirui Song and Yuanxi Wang and Zhexuan Cui and Yuke Li and Qian Jiang and Miao Fang and Xiuying Chen},
+      year={2025},
+      eprint={2508.09241},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2508.09241}, 
 }
 ```

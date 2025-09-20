@@ -8,9 +8,9 @@
 
 ![FineBench illustration diagram](assets/Illustration.png)
 
-📄 **Paper**: [FineState-Bench: A Comprehensive Benchmark for Fine-Grained State Control in GUI Agents](https://arxiv.org/abs/XXXX.XXXXX)  
+📄 **Paper**: [FineState-Bench: A Comprehensive Benchmark for Fine-Grained State Control in GUI Agents](https://arxiv.org/pdf/2508.09241v1)  
 💻 **Code**: [GitHub Repository](https://github.com/AnonymousThewarehouse/FineState-Bench)  
-🤗 **Models**: [HuggingFace Hub](https://huggingface.co/datasets/Willtime2006/Static-FineBench)
+🤗 **Models**: [HuggingFace Hub](https://huggingface.co/datasets/wumiaoshou/Static-FineBench)
 
 ---
 
